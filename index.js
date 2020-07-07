@@ -14,7 +14,8 @@ app.post('/verify_token', middle.verifyToken, user.verify_token);
 
 //----------------Driver API's------------------
 app.post('/signup_driver', driver.register_driver);
-app.post ('/login_driver', driver.login_driver);
 app.post ('/verify_otp_driver', driver.verify_otp_driver);
+app.post ('/login_driver', driver.login_driver);
 app.post('/forgot_password_driver', driver.forgot_password_driver);
-app.post ('/change_password_driver', middle.verify_token, driver.change_password_driver)
+app.post ('/change_password_driver', middle.verify_token, driver.change_password_driver);
+app.post('update_driver', driver.update_driver);

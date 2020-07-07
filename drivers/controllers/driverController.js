@@ -241,4 +241,62 @@ function change_password_driver(req, res) {
 }
 
 
-module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver}
+//-------------------------Update user----------------------------
+function update_driver(req, res) {
+    Promise.coroutine (function *(){
+        let checkId = yield Driver.find ({ _id: req.body.userData._id });
+        if (_.isEmpty (checkId)){
+            return res.send ({
+                message: 'Driver not found',
+                status: 400,
+                data: {}
+            })
+        }
+        let checkEmail = yield Driver.find ({$or: [{email: req.body.email}, {phone_number: req.body.phone_number}]})
+        if (!_.isEmpty (checkEmail)){
+            return res.send ({
+                message: 'Driver already exists',
+                status: 400,
+                data: {}
+            })
+        }
+        let opts = {}
+        if (req.body.first_name){
+            opts.first_name = req.body.first_name
+        }
+        if (req.body.last_name){
+            opts.last_name = req.body.last_name
+        }
+        if (req.body.email){
+            opts.email = req.body.email;
+        }
+        if (req.body.phone_number){
+            opts.phone_number = req.body.phone_number
+        }
+
+        let update_detail = yield Driver.update ({_id: req.body.userData._id}, opts);
+        if (_.isEmpty (update_detail)){
+            return res.send ({
+                message: 'Error in updating user details',
+                status: 400,
+                data: {}
+            })
+        }
+        return res.send ({
+            message: 'Profile Updated successfully',
+            status: 200,
+            data: {opts}
+        })
+    })
+    ().catch((error) => {
+        console.log('Update driver: Something went wrong', error)
+        return res.send({
+            message: 'Update user error: Something went wrong',
+            status: 401,
+            data: {}
+        })
+    });
+}
+
+
+module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver, update_driver}
