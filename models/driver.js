@@ -40,6 +40,18 @@ var driverSchema = new schema ({
     access_token: {
         type: String,
         required: true
+    },
+    latitude: {
+        type: Number,
+        required: true
+    },
+    longitude: {
+        type: Number,
+        required: true
+    },
+    is_blocked: {
+        type: Boolean,
+        default: false
     }
 });
 mongoose.model ('drivers', driverSchema);

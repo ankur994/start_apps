@@ -40,6 +40,10 @@ var userSchema = new schema ({
     access_token: {
         type: String,
         required: true
+    },
+    is_blocked: {
+        type: Boolean,
+        default: false
     }
 });
 mongoose.model ('vendors', userSchema);

@@ -8,7 +8,7 @@ var jwt = require('jsonwebtoken');
 
 
 //-----------------Register user-------------------------
-function register_user(req, res) {
+function register_vendor(req, res) {
     Promise.coroutine (function *(){
         let checkEmail = yield User.find ({$or:[
             {email: req.body.email}, 
@@ -101,7 +101,7 @@ function verify_otp (req, res){
 }
 
 //------------------------Login------------------------------
-function login_user(req, res) {
+function login_vendor(req, res) {
     Promise.coroutine(function* () {
         let checkEmail = yield User.find({
             email: req.body.email
@@ -116,6 +116,13 @@ function login_user(req, res) {
         if (checkEmail[0].is_verify == false){
             return res.send ({
                 message: 'Email is not verified',
+                status: 400,
+                data: {}
+            })
+        }
+        if (checkEmail[0].is_blocked == true) {
+            return res.send ({
+                message: "Your account has been blocked.",
                 status: 400,
                 data: {}
             })
@@ -244,7 +251,7 @@ function change_password (req, res) {
 }
 
 //------------------------Delete user------------------------------
-function delete_user (req, res) {
+function delete_vendor (req, res) {
     Promise.coroutine (function *(){
         let checkEmail = yield User.find ({ email: req.body.email});
         if (_.isEmpty (checkEmail)){
@@ -274,7 +281,7 @@ function delete_user (req, res) {
 }
 
 //-------------------------Update user----------------------------
-function update_user(req, res) {
+function update_vendor (req, res) {
     Promise.coroutine (function *(){
         let checkId = yield User.find ({ _id: req.body.userData._id });
         if (_.isEmpty (checkId)){
@@ -359,4 +366,51 @@ function verify_token (req, res) {
         })
     })
 }
-module.exports = { register_user, verify_otp, login_user, forgot_password, change_password, delete_user, update_user, verify_token}
+
+//------------------------Block/Unblock user-----------------------------
+function block_unblock_vendor (req, res) {
+    Promise.coroutine (function *() {
+        let checkEmail = yield User.find ({
+            email: req.body.email
+        })
+        if (_.isEmpty (checkEmail)){
+            return res.send ({
+                message: 'Vendor not found',
+                status: 400,
+                data: {}
+            })
+        }
+        let is_blocked = req.body.is_blocked;
+
+        if (is_blocked == '1'){
+        yield User.update ({email: checkEmail[0].email},{is_blocked: true})
+            return res.send ({
+                message: 'Vendor blocked successfully',
+                status: 200,
+                data: {}
+            })
+        }
+        if (is_blocked == '0'){
+        yield User.update ({email: checkEmail[0].email},{is_blocked: false})
+            return res.send ({
+                message: 'Vendor unblocked successfully',
+                status: 200,
+                data: {}
+            })
+        }
+        return res.send ({
+            message: 'Please enter 0 or 1',
+            status: 400,
+            data: {}
+        })
+    })
+    ().catch((error) => {
+        console.log('Blocked/Unblocked: Something went wrong', error)
+        return res.send({
+            message: 'Blocked/Unblocked: Something went wrong',
+            status: 400,
+            data: {}
+        })
+    })
+}
+module.exports = { register_vendor, verify_otp, login_vendor, forgot_password, change_password, delete_vendor, update_vendor, verify_token, block_unblock_vendor}

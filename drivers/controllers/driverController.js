@@ -30,7 +30,9 @@ function register_driver(req, res) {
             password: yield common.bcryptHash(req.body.password),
             phone_number: req.body.phone_number,
             otp: '1111',
-            access_token: registerToken
+            access_token: registerToken,
+            latitude: req.body.latitude,
+            longitude: req.body.longitude
         })
         if (_.isEmpty (registerDriver)){
             return res.send ({
@@ -118,6 +120,13 @@ function login_driver(req, res) {
         if (checkEmail[0].is_verify == false){
             return res.send ({
                 message: "Email is not verified",
+                status: 400,
+                data: {}
+            })
+        }
+        if (checkEmail[0].is_blocked == true) {
+            return res.send ({
+                message: "Your account has been blocked.",
                 status: 400,
                 data: {}
             })
@@ -240,10 +249,10 @@ function change_password_driver(req, res) {
     });
 }
 
-
-//-------------------------Update user----------------------------
+//-------------------------Update driver----------------------------
 function update_driver(req, res) {
     Promise.coroutine (function *(){
+        console.log('7487678564875', req.body.userData)
         let checkId = yield Driver.find ({ _id: req.body.userData._id });
         if (_.isEmpty (checkId)){
             return res.send ({
@@ -255,7 +264,7 @@ function update_driver(req, res) {
         let checkEmail = yield Driver.find ({$or: [{email: req.body.email}, {phone_number: req.body.phone_number}]})
         if (!_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Driver already exists',
+                message: 'Email or phone no. already exists',
                 status: 400,
                 data: {}
             })
@@ -272,6 +281,12 @@ function update_driver(req, res) {
         }
         if (req.body.phone_number){
             opts.phone_number = req.body.phone_number
+        }
+        if (req.body.latitude){
+            opts.latitude = req.body.latitude
+        }
+        if (req.body.longitude){
+            opts.longitude = req.body.longitude
         }
 
         let update_detail = yield Driver.update ({_id: req.body.userData._id}, opts);
@@ -298,5 +313,53 @@ function update_driver(req, res) {
     });
 }
 
+//------------------------Block/Unblock driver-----------------------------
+function block_unblock_driver (req, res) {
+    Promise.coroutine (function *() {
+        let checkEmail = yield Driver.find ({
+            email: req.body.email
+        })
+        if (_.isEmpty (checkEmail)){
+            return res.send ({
+                message: 'Driver not found',
+                status: 400,
+                data: {}
+            })
+        }
+        let is_blocked = req.body.is_blocked;
 
-module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver, update_driver}
+        if (is_blocked == '1'){
+        yield User.update ({email: checkEmail[0].email},{is_blocked: true})
+            return res.send ({
+                message: 'Driver blocked successfully',
+                status: 200,
+                data: {}
+            })
+        }
+        if (is_blocked == '0'){
+        yield User.update ({email: checkEmail[0].email},{is_blocked: false})
+            return res.send ({
+                message: 'Driver unblocked successfully',
+                status: 200,
+                data: {}
+            })
+        }
+        return res.send ({
+            message: 'Please enter 0 or 1',
+            status: 400,
+            data: {}
+        })
+    })
+    ().catch((error) => {
+        console.log('Blocked/Unblocked: Something went wrong', error)
+        return res.send({
+            message: 'Blocked/Unblocked: Something went wrong',
+            status: 400,
+            data: {}
+        })
+    })
+}
+
+
+module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver, update_driver, 
+    block_unblock_driver }
