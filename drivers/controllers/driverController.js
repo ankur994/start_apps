@@ -21,7 +21,7 @@ function register_driver(req, res) {
                 data: {}
             })
         }
-        let registerToken = jwt.sign({email: req.body.email}, secretKey, {expiresIn: '50d'})
+        let registerToken = jwt.sign({email: req.body.email, _id: req.body._id}, secretKey, {expiresIn: '50d'})
 
         let registerDriver = yield Driver.create ({
             first_name: req.body.first_name,
@@ -31,8 +31,10 @@ function register_driver(req, res) {
             phone_number: req.body.phone_number,
             otp: '1111',
             access_token: registerToken,
-            latitude: req.body.latitude,
-            longitude: req.body.longitude
+            location: {
+                type: "Point",
+                coordinates: [req.body.longitude, req.body.latitude]
+            }
         })
         if (_.isEmpty (registerDriver)){
             return res.send ({
