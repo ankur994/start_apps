@@ -249,10 +249,9 @@ function change_password_driver(req, res) {
     });
 }
 
-//-------------------------Update driver----------------------------
+//-------------------------Update user----------------------------
 function update_driver(req, res) {
     Promise.coroutine (function *(){
-        console.log('7487678564875', req.body.userData)
         let checkId = yield Driver.find ({ _id: req.body.userData._id });
         if (_.isEmpty (checkId)){
             return res.send ({
@@ -264,7 +263,7 @@ function update_driver(req, res) {
         let checkEmail = yield Driver.find ({$or: [{email: req.body.email}, {phone_number: req.body.phone_number}]})
         if (!_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Email or phone no. already exists',
+                message: 'Driver already exists',
                 status: 400,
                 data: {}
             })
@@ -282,13 +281,6 @@ function update_driver(req, res) {
         if (req.body.phone_number){
             opts.phone_number = req.body.phone_number
         }
-        if (req.body.latitude){
-            opts.latitude = req.body.latitude
-        }
-        if (req.body.longitude){
-            opts.longitude = req.body.longitude
-        }
-
         let update_detail = yield Driver.update ({_id: req.body.userData._id}, opts);
         if (_.isEmpty (update_detail)){
             return res.send ({
@@ -329,7 +321,7 @@ function block_unblock_driver (req, res) {
         let is_blocked = req.body.is_blocked;
 
         if (is_blocked == '1'){
-        yield User.update ({email: checkEmail[0].email},{is_blocked: true})
+        yield Driver.update ({email: checkEmail[0].email},{is_blocked: true})
             return res.send ({
                 message: 'Driver blocked successfully',
                 status: 200,
@@ -337,7 +329,7 @@ function block_unblock_driver (req, res) {
             })
         }
         if (is_blocked == '0'){
-        yield User.update ({email: checkEmail[0].email},{is_blocked: false})
+        yield Driver.update ({email: checkEmail[0].email},{is_blocked: false})
             return res.send ({
                 message: 'Driver unblocked successfully',
                 status: 200,

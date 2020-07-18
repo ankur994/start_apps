@@ -8,10 +8,11 @@ app.post('/verify_otp', user.verify_otp);
 app.post('/login', user.login_vendor);
 app.post('/forgot_password', user.forgot_password);
 app.post('/change_password', middle.verify_token, user.change_password);
-app.post('/delete_vendor', user.delete_user);
+app.post('/delete_vendor', user.delete_vendor);
 app.post('/update_vendor', middle.verify_token, user.update_vendor);
 app.post('/verify_token', middle.verifyToken, user.verify_token);
 app.post('/block_unblock_vendor', user.block_unblock_vendor);
+app.post('/get_all_drivers', user.get_all_drivers);
 
 //----------------Driver API's------------------
 app.post('/signup_driver', driver.register_driver);

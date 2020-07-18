@@ -1,10 +1,12 @@
 var Promise = require('bluebird');
 var _ = require('underscore');
 var User = require('./../../models/user');
+var Driver = require ('../../models/driver');
 var common = require('./../../commonFunctions');
 var url = require ('./../../config');
 const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
+const { indexBy } = require('underscore');
 
 
 //-----------------Register user-------------------------
@@ -21,7 +23,7 @@ function register_vendor(req, res) {
                 data: {}
             })
         }
-        let registerToken = jwt.sign({email: req.body.email}, secretKey, {expiresIn: '50d'})
+        let registerToken = jwt.sign({email: req.body.email, _id: req.body._id}, secretKey, {expiresIn: '50d'})
 
         let registerUser = yield User.create ({
             first_name: req.body.first_name,
@@ -136,9 +138,9 @@ function login_vendor(req, res) {
             })
         }
 
-        let access_token = jwt.sign({email: checkEmail[0].email, _id: checkEmail[0]._id }, secretKey, { expiresIn: '50d' },'loginToken');
+        let access_token = jwt.sign({email: checkEmail[0].email, _id: checkEmail[0]._id }, secretKey, { expiresIn: '50d' });
         yield User.update ({email: checkEmail[0].email}, {access_token: access_token});
-     
+
         return res.send ({
             message: 'Login successfully',
             status: 200,
@@ -281,7 +283,7 @@ function delete_vendor (req, res) {
 }
 
 //-------------------------Update user----------------------------
-function update_vendor (req, res) {
+function update_vendor(req, res) {
     Promise.coroutine (function *(){
         let checkId = yield User.find ({ _id: req.body.userData._id });
         if (_.isEmpty (checkId)){
@@ -413,4 +415,65 @@ function block_unblock_vendor (req, res) {
         })
     })
 }
-module.exports = { register_vendor, verify_otp, login_vendor, forgot_password, change_password, delete_vendor, update_vendor, verify_token, block_unblock_vendor}
+
+//----------------------------Get all drivers--------------------------------
+function get_all_drivers (req, res){
+    Promise.coroutine (function *() {
+        let checkEmail = yield User.find ({
+            email: req.body.email
+        })
+        if (_.isEmpty (checkEmail)){
+            return res.send ({
+                message: 'Vendor not found',
+                status: 400,
+                data: {}
+            })
+        }
+        let latitude = req.body.latitude;
+        let longitude = req.body.longitude;
+
+    let checkAllDrivers = yield Driver.aggregate([{
+        $geoNear: {
+            near: {
+                type: "Point",
+                coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            distanceField: "dist.calculated",
+            maxDistance: 2000,        // in meters
+            spherical: true,
+        },
+    }, {
+        $match: { is_verify: true, is_blocked: false }
+    }])
+        let withoutPasswordDriver = [];
+        checkAllDrivers.forEach((ele) => {
+            delete ele.password
+            delete ele.otp;
+            withoutPasswordDriver.push(ele);
+        })
+       return res.send({
+           message: 'Drivers get successfully',
+           status: 200,
+           data: { withoutPasswordDriver }
+       })
+        // let checkAllDrivers = yield Driver.find ({
+        //     is_verify: true, is_blocked: false
+        // }, {password: 0, access_token: 0, otp: 0});
+        //     return res.send ({
+        //         message: 'Drivers get succcessfully',
+        //         status: 200,
+        //         data: {checkAllDrivers}
+        //     })
+    })
+    ().catch((error) => {
+        console.log('Get drivers : Something went wrong', error)
+        return res.send({
+            message: 'Get drivers : Something went wrong',
+            status: 400,
+            data: {}
+        })
+    })
+}
+
+module.exports = { register_vendor, verify_otp, login_vendor, forgot_password, change_password, delete_vendor, update_vendor, verify_token, 
+    block_unblock_vendor, get_all_drivers}

@@ -4,7 +4,7 @@ app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies]
 require ('./index.js')
-var port = process.env.port || 3006;
+var port = process.env.port || 3004;
 var moment = require ('moment');
 var url = require('./config')
 

@@ -52,8 +52,15 @@ var driverSchema = new schema ({
     is_blocked: {
         type: Boolean,
         default: false
-    }
+    },
+    location: {
+        type: { type: String },
+        coordinates: [Number]
+       }
 });
+
+driverSchema.index({ location: "2dsphere" });
+
 mongoose.model ('drivers', driverSchema);
 
 module.exports = mongoose.model ('drivers');
