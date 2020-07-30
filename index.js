@@ -1,6 +1,8 @@
 var user = require('./users/controllers/userController');
 var middle = require ('./middleware/auth');
-var driver = require ('./drivers/controllers/driverController')
+var driver = require ('./drivers/controllers/driverController');
+var product = require ('./products/controllers/productController');
+var job = require ('./jobs/controllers/jobController');
 
 //----------------User API's------------------
 app.post('/signup', user.register_vendor);
@@ -22,3 +24,12 @@ app.post('/forgot_password_driver', driver.forgot_password_driver);
 app.post ('/change_password_driver', middle.verify_token, driver.change_password_driver);
 app.post('/update_driver', middle.verify_token, driver.update_driver);
 app.post('/block_unblock_driver', driver.block_unblock_driver);
+
+// ----------------Product API's------------------
+app.post('/register_product', product.register_product);
+app.post('/get_all_products', product.get_all_products);
+app.post('/update_product', product.update_product);
+app.post('/block_unblock_product', product.block_unblock_product);
+
+// ----------------Job API's------------------
+app.post('/create_order', middle.verify_token, job.create_order);

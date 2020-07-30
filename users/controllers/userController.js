@@ -447,8 +447,9 @@ function get_all_drivers (req, res){
     }])
         let withoutPasswordDriver = [];
         checkAllDrivers.forEach((ele) => {
-            delete ele.password
-            delete ele.otp;
+            delete ele.password,
+            delete ele.otp,
+            delete ele.access_token
             withoutPasswordDriver.push(ele);
         })
        return res.send({
