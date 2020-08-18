@@ -25,12 +25,12 @@ var productSchema = new schema ({
     is_blocked:{
         type: Boolean,
         default: false
-    },
-    created_at: {
-        type: Date,
-        default: Date.now()
     }
-});
-mongoose.model ('products', productSchema);
+    // created_at: {
+    //     type: Date,
+    //     default: Date.now()
+    // }
+},{timestamps: true});
 
-module.exports = mongoose.model ('products');
+var productModel = mongoose.model ('products', productSchema);
+module.exports = productModel;

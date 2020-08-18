@@ -24,6 +24,23 @@ function bcryptHashCompare (options, hash) {
     })
 }
 
+//---------------------------------------------------------
+function generateOTP() {
+    try {
+        var digits = '0123456789'; 
+        let OTP = ''; 
+        for (let i = 0; i < 4; i++ ) { 
+            OTP += digits[Math.floor(Math.random() * 10)]; 
+        }
+        return OTP; 
 
+    } catch (error) {
+        return res.send({
+            message: 'Invalid otp',
+            status: 400,
+            data: {}
+        });
+    }
+}
 
-module.exports = { bcryptHash, bcryptHashCompare };
+module.exports = { bcryptHash, bcryptHashCompare, generateOTP };

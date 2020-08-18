@@ -26,21 +26,6 @@ function verifyToken(req, res, next) {
 
 //---------------------------------------------------
 function verify_token(req, res, next) {
-        // var access_token = req.headers.authorization.split(' ') [1];
-    // var bearerToken = req.body.access_token;
-    // var access_token = bearerToken.split (' ') [1];
-    // var decode = jwt.verify(access_token, secretKey);
-    // req.body.userData = decode;
-
-    // if (!bearerToken) {
-    //     return res.send({
-    //         message: 'Invalid token or token expired',
-    //         status: 400,
-    //         data: {}
-    //     })
-    // }
-    // next();
-
     try {
         var bearerToken = req.body.access_token;
         var access_token = bearerToken.split(' ')[1];

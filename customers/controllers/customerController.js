@@ -1,40 +1,41 @@
 var Promise = require('bluebird');
 var _ = require('underscore');
-var User = require('./../../models/user');
+var Customer = require('../../models/customer');
 var Driver = require ('../../models/driver');
-var common = require('./../../commonFunctions');
-var url = require ('./../../config');
+var common = require('../../commonFunctions');
+var otp = require ('../../commonFunctions');
+var url = require ('../../config');
 const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
 const { indexBy } = require('underscore');
 
 
-//-----------------Register user-------------------------
-function register_vendor(req, res) {
+//-----------------Register customer-------------------------
+function register_customer(req, res) {
     Promise.coroutine (function *(){
-        let checkEmail = yield User.find ({$or:[
+        let checkEmail = yield Customer.find ({$or:[
             {email: req.body.email}, 
             {phone_number: req.body.phone_number}
         ]})
         if (!_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'User already exists',
+                message: 'Customer already exists',
                 status: 400,
                 data: {}
             })
         }
         let registerToken = jwt.sign({email: req.body.email, _id: req.body._id}, secretKey, {expiresIn: '50d'})
 
-        let registerUser = yield User.create ({
+        let registerCustomer = yield Customer.create ({
             first_name: req.body.first_name,
             last_name: req.body.last_name,
             email: req.body.email,
             password: yield common.bcryptHash(req.body.password),
             phone_number: req.body.phone_number,
-            otp: '1111',
+            otp: otp.generateOTP(),
             access_token: registerToken
         })
-        if (_.isEmpty (registerUser)){
+        if (_.isEmpty (registerCustomer)){
             return res.send ({
                 message: 'Error in Registration',
                 status: 400,
@@ -44,11 +45,11 @@ function register_vendor(req, res) {
         return res.send({
             message: 'Registration successfull',
             status: 200,
-            data: { registerUser }
+            data: { registerCustomer }
         })
     })
     ().catch((error) => {
-        console.log('Register user: Something went wrong', error)
+        console.log('Register customer: Something went wrong', error)
         return res.send({
             "message": "Register error: Something went wrong",
             "status": 401,
@@ -60,12 +61,12 @@ function register_vendor(req, res) {
 //------------------------Verify OTP---------------------------
 function verify_otp (req, res){
     Promise.coroutine (function *(){
-        let checkPhone = yield User.find ({
+        let checkPhone = yield Customer.find ({
             phone_number: req.body.phone_number
         })
         if (_.isEmpty (checkPhone)){
             return res.send ({
-                message: 'User not found',
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
@@ -85,7 +86,7 @@ function verify_otp (req, res){
                 data: {}
             })
         }
-        yield User.update ({phone_number: req.body.phone_number},{is_verify: true})
+        yield Customer.update ({phone_number: req.body.phone_number},{is_verify: true})
         return res.send ({
             message: 'OTP verified successfully',
             status: 200,
@@ -103,14 +104,14 @@ function verify_otp (req, res){
 }
 
 //------------------------Login------------------------------
-function login_vendor(req, res) {
+function login_customer(req, res) {
     Promise.coroutine(function* () {
-        let checkEmail = yield User.find({
+        let checkEmail = yield Customer.find({
             email: req.body.email
         })
         if (_.isEmpty(checkEmail)) {
             return res.send({
-                message: 'User not found',
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
@@ -139,7 +140,7 @@ function login_vendor(req, res) {
         }
 
         let access_token = jwt.sign({email: checkEmail[0].email, _id: checkEmail[0]._id }, secretKey, { expiresIn: '50d' });
-        yield User.update ({email: checkEmail[0].email}, {access_token: access_token});
+        yield Customer.update ({email: checkEmail[0].email}, {access_token: access_token});
 
         return res.send ({
             message: 'Login successfully',
@@ -149,7 +150,7 @@ function login_vendor(req, res) {
         
     })
     ().catch((error) => {
-        console.log('Login user: Something went wrong', error)
+        console.log('Login customer: Something went wrong', error)
         return res.send({
             message: "Login error: Something went wrong",
             status: 401,
@@ -161,27 +162,27 @@ function login_vendor(req, res) {
 //-------------------Forgot Password---------------------------
 function forgot_password (req, res){
     Promise.coroutine (function *(){
-        let checkEmail = yield User.find({
+        let checkEmail = yield Customer.find({
             email: req.body.email
         })
         if (_.isEmpty (checkEmail)){
             return res.send({
-                message: "User not found",
+                message: "Customer not found",
                 status: 400,
                 data: {}
             })
         }
-        let reset_password = yield User.update ({email: req.body.email}, {password: yield common.bcryptHash (req.body.password)});
-        if(!_.isEmpty (reset_password)){
+        let reset_password = yield Customer.update ({email: checkEmail[0].email}, {password: yield common.bcryptHash (req.body.password)});
+        if(_.isEmpty (reset_password)){
             return res.send ({
-                message: 'Password updated successfully',
+                message: 'Error in updating password',
                 status: 200,
                 data: {}
             })
         }
         return res.send ({
-            message: 'Not updated',
-            status: 400,
+            message: 'Password updated successfully',
+            status: 200,
             data: {}
         })
     })
@@ -203,12 +204,12 @@ function change_password (req, res) {
         //         message: 'not match'
         //     })
         // }
-        let checkEmail = yield User.find ({ 
+        let checkEmail = yield Customer.find ({ 
             email: req.body.userData.email
         })
         if (_.isEmpty (checkEmail)){ 
             return res.send ({
-                message: 'User not found',
+                message: 'Customer not found',
                 status: 400,
                 data:{}
             })
@@ -221,7 +222,7 @@ function change_password (req, res) {
                 data: {}
             })
         }
-        let newPassword = yield User.update ({email: req.body.userData.email},{password: yield common.bcryptHash (req.body.newPassword)});
+        let newPassword = yield Customer.update ({email: checkEmail[0].email},{password: yield common.bcryptHash (req.body.newPassword)});
         if(req.body.oldPassword == req.body.newPassword){
             return res.send({
                 message: "Old and new password can't be same",
@@ -252,19 +253,19 @@ function change_password (req, res) {
     });
 }
 
-//------------------------Delete user------------------------------
-function delete_vendor (req, res) {
+//------------------------Delete customer------------------------------
+function delete_customer (req, res) {
     Promise.coroutine (function *(){
-        let checkEmail = yield User.find ({ email: req.body.email});
+        let checkEmail = yield Customer.find ({ email: req.body.email});
         if (_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'User not found',
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
         }
-        let deleteUser = yield User.deleteOne ({email: req.body.email});
-        if (!_.isEmpty (deleteUser)){
+        let deleteCustomer = yield Customer.deleteOne ({email: req.body.email});
+        if (!_.isEmpty (deleteCustomer)){
             return res.send ({
                 message: 'Deleted succesfully',
                 status: 200,
@@ -273,30 +274,30 @@ function delete_vendor (req, res) {
         }
     })
     ().catch((error) => {
-        console.log('Delete user: Something went wrong', error)
+        console.log('Delete customer: Something went wrong', error)
         return res.send({
-            message: "Delete user error: Something went wrong",
+            message: "Delete customer error: Something went wrong",
             status: 401,
             data: {}
         })
     });
 }
 
-//-------------------------Update user----------------------------
-function update_vendor(req, res) {
+//-------------------------Update customer----------------------------
+function update_customer(req, res) {
     Promise.coroutine (function *(){
-        let checkId = yield User.find ({ _id: req.body.userData._id });
+        let checkId = yield Customer.find ({ _id: req.body.userData._id });
         if (_.isEmpty (checkId)){
             return res.send ({
-                message: 'User not found',
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
         }
-        let checkEmail = yield User.find ({$or: [{email: req.body.email}, {phone_number: req.body.phone_number}]})
+        let checkEmail = yield Customer.find ({$or: [{email: req.body.email}, {phone_number: req.body.phone_number}]})
         if (!_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'User already exists',
+                message: 'Customer already exists',
                 status: 400,
                 data: {}
             })
@@ -315,10 +316,10 @@ function update_vendor(req, res) {
             opts.phone_number = req.body.phone_number
         }
 
-        let update_detail = yield User.update ({_id: req.body.userData._id}, opts);
+        let update_detail = yield Customer.update ({_id: req.body.userData._id}, opts);
         if (_.isEmpty (update_detail)){
             return res.send ({
-                message: 'Error in updating user details',
+                message: 'Error in updating customer details',
                 status: 400,
                 data: {}
             })
@@ -330,9 +331,9 @@ function update_vendor(req, res) {
         })
     })
     ().catch((error) => {
-        console.log('Update user: Something went wrong', error)
+        console.log('Update customer: Something went wrong', error)
         return res.send({
-            message: 'Update user error: Something went wrong',
+            message: 'Update customer error: Something went wrong',
             status: 401,
             data: {}
         })
@@ -352,7 +353,7 @@ function verify_token (req, res) {
             })
         }
      
-        yield User.update({ access_token: req.token }, { is_verify: true });
+        yield Customer.update({ access_token: req.token }, { is_verify: true });
         return res.send({
             message: 'Token verified successfully',
             status: 400,
@@ -369,15 +370,15 @@ function verify_token (req, res) {
     })
 }
 
-//------------------------Block/Unblock user-----------------------------
-function block_unblock_vendor (req, res) {
+//------------------------Block/Unblock customer-----------------------------
+function block_unblock_customer (req, res) {
     Promise.coroutine (function *() {
-        let checkEmail = yield User.find ({
+        let checkEmail = yield Customer.find ({
             email: req.body.email
         })
         if (_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Vendor not found',
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
@@ -385,17 +386,17 @@ function block_unblock_vendor (req, res) {
         let is_blocked = req.body.is_blocked;
 
         if (is_blocked == '1'){
-        yield User.update ({email: checkEmail[0].email},{is_blocked: true})
+        yield Customer.update ({email: checkEmail[0].email},{is_blocked: true})
             return res.send ({
-                message: 'Vendor blocked successfully',
+                message: 'Customer blocked successfully',
                 status: 200,
                 data: {}
             })
         }
         if (is_blocked == '0'){
-        yield User.update ({email: checkEmail[0].email},{is_blocked: false})
+        yield Customer.update ({email: checkEmail[0].email},{is_blocked: false})
             return res.send ({
-                message: 'Vendor unblocked successfully',
+                message: 'Customer unblocked successfully',
                 status: 200,
                 data: {}
             })
@@ -419,12 +420,12 @@ function block_unblock_vendor (req, res) {
 //----------------------------Get all drivers--------------------------------
 function get_all_drivers (req, res){
     Promise.coroutine (function *() {
-        let checkEmail = yield User.find ({
+        let checkEmail = yield Customer.find ({
             email: req.body.email
         })
         if (_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Vendor not found',
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
@@ -439,7 +440,7 @@ function get_all_drivers (req, res){
                 coordinates: [parseFloat(longitude), parseFloat(latitude)],
             },
             distanceField: "dist.calculated",
-            maxDistance: 2000,        // in meters
+            maxDistance: 200000,        // in meters
             spherical: true,
         },
     }, {
@@ -476,5 +477,5 @@ function get_all_drivers (req, res){
     })
 }
 
-module.exports = { register_vendor, verify_otp, login_vendor, forgot_password, change_password, delete_vendor, update_vendor, verify_token, 
-    block_unblock_vendor, get_all_drivers}
+module.exports = { register_customer, verify_otp, login_customer, forgot_password, change_password, delete_customer, update_customer, verify_token, 
+    block_unblock_customer, get_all_drivers}

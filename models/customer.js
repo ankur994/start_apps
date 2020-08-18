@@ -1,7 +1,7 @@
 var mongoose = require ('mongoose');
 var schema = mongoose.Schema;
-// user schema
-var userSchema = new schema ({
+
+var customerSchema = new schema ({
     first_name: {
         type: String, 
         required: true
@@ -25,10 +25,6 @@ var userSchema = new schema ({
         required: true,
         unique: true
     },
-    created_at: {
-        type: Date,
-        default: Date.now(),
-    },
     otp: {
         type: Number,
         required: true
@@ -44,8 +40,12 @@ var userSchema = new schema ({
     is_blocked: {
         type: Boolean,
         default: false
-    }
-});
-mongoose.model ('vendors', userSchema);
+    },
+    // created_at: {
+    //     type: Date,
+    //     default: Date.now(),
+    // },
+},{timestamps: true})
 
-module.exports = mongoose.model ('vendors');
+var customerModel =mongoose.model ('customers', customerSchema);
+module.exports = customerModel;

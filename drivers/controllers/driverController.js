@@ -7,7 +7,7 @@ const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
 
 
-//-----------------Register user-------------------------
+//-----------------Register driver-------------------------
 function register_driver(req, res) {
     Promise.coroutine (function *(){
         let checkEmail = yield Driver.find ({$or:[
@@ -251,7 +251,7 @@ function change_password_driver(req, res) {
     });
 }
 
-//-------------------------Update user----------------------------
+//-------------------------Update driver----------------------------
 function update_driver(req, res) {
     Promise.coroutine (function *(){
         let checkId = yield Driver.find ({ _id: req.body.userData._id });
@@ -286,7 +286,7 @@ function update_driver(req, res) {
         let update_detail = yield Driver.update ({_id: req.body.userData._id}, opts);
         if (_.isEmpty (update_detail)){
             return res.send ({
-                message: 'Error in updating user details',
+                message: 'Error in updating driver details',
                 status: 400,
                 data: {}
             })
@@ -300,7 +300,7 @@ function update_driver(req, res) {
     ().catch((error) => {
         console.log('Update driver: Something went wrong', error)
         return res.send({
-            message: 'Update user error: Something went wrong',
+            message: 'Update driver error: Something went wrong',
             status: 401,
             data: {}
         })
@@ -354,6 +354,5 @@ function block_unblock_driver (req, res) {
     })
 }
 
-
-module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver, update_driver, 
-    block_unblock_driver }
+module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver, update_driver,
+    block_unblock_driver}

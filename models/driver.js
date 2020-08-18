@@ -25,10 +25,6 @@ var driverSchema = new schema ({
         required: true,
         unique: true
     },
-    created_at: {
-        type: Date,
-        default: Date.now(),
-    },
     otp: {
         type: Number,
         required: true
@@ -57,10 +53,10 @@ var driverSchema = new schema ({
         type: { type: String },
         coordinates: [Number]
        }
-});
+},{timestamps: true});
 
 driverSchema.index({ location: "2dsphere" });
 
-mongoose.model ('drivers', driverSchema);
+var driverModel = mongoose.model ('drivers', driverSchema);
 
-module.exports = mongoose.model ('drivers');
+module.exports = driverModel;

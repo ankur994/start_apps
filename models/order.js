@@ -1,7 +1,7 @@
 var mongoose = require ('mongoose');
 var schema = mongoose.Schema;
-// job schema
-var jobSchema = new schema ({
+
+var orderSchema = new schema ({
     //  _id: 
     //     mongoose.Schema.Types.ObjectId
     // ,
@@ -17,19 +17,15 @@ var jobSchema = new schema ({
         type: String,
         required: true
     },
-    _id: {
-        type: String,
+    product_id: {
+        type: mongoose.Schema.ObjectId,
         required: true
     },
     product_quantity: {
         type: Number,
         required: true
-    },
-    created_at: {
-        type: Date,
-        default: Date.now(),
     }
-});
-mongoose.model ('jobs', jobSchema);
+},{timestamps: true});
 
-module.exports = mongoose.model ('jobs');
+var orderModel = mongoose.model ('orders', orderSchema);
+module.exports = orderModel;

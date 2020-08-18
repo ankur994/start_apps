@@ -1,27 +1,26 @@
 var Promise = require('bluebird');
 var _ = require('underscore');
 var Product = require('../../models/product');
-var Order = require('../../models/jobs');
-var User = require ('../../models/user');
+var Order = require('../../models/order');
+var Customer = require ('../../models/customer');
 var url = require ('../../config');
-const secretKey = process.env.JWT_KEY = 'secret';
 var mongoose = require ('mongoose');
 
 //-----------------Create Order------------------------
 function create_order(req, res) {
     Promise.coroutine (function *(){
-        let checkUser = yield User.find({
+        let checkCustomer = yield Customer.find({
             _id: req.body.userData._id
         })
-        if (_.isEmpty (checkUser)){
+        if (_.isEmpty (checkCustomer)){
             return res.send ({
-                message: 'No vendor found',
+                message: 'No customer found',
                 status: 400,
                 data: {}
             })
         }
         let checkProduct = yield Product.find ({
-            _id: req.body._id
+            _id: req.body.product_id
         })
         if (_.isEmpty (checkProduct)){
             return res.send ({
@@ -52,8 +51,8 @@ function create_order(req, res) {
             })
         }
         let order = yield Order.create ({
-            // _id: new mongoose.Types.ObjectId,
-            _id: req.body._id,
+            // _id: mongoose.Types.ObjectId(),
+            product_id: checkProduct[0]._id,
             latitude: req.body.latitude,
             longitude: req.body.longitude,
             customer_address: req.body.customer_address,
