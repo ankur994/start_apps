@@ -7,8 +7,6 @@ var otp = require ('../../commonFunctions');
 var url = require ('../../config');
 const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
-const { indexBy } = require('underscore');
-
 
 //-----------------Register customer-------------------------
 function register_customer(req, res) {
@@ -71,6 +69,13 @@ function verify_otp (req, res){
                 data: {}
             })
         }
+        if (checkPhone[0].is_deleted == true){
+            return res.send ({
+                message: 'Customer not found',
+                status: 400,
+                data: {}
+            })
+        }
         let otp = req.body.otp;
         if (otp != checkPhone[0].otp){
             return res.send ({
@@ -111,6 +116,13 @@ function login_customer(req, res) {
         })
         if (_.isEmpty(checkEmail)) {
             return res.send({
+                message: 'Customer not found',
+                status: 400,
+                data: {}
+            })
+        }
+        if (checkEmail[0].is_deleted == true){
+            return res.send ({
                 message: 'Customer not found',
                 status: 400,
                 data: {}
@@ -168,6 +180,13 @@ function forgot_password (req, res){
         if (_.isEmpty (checkEmail)){
             return res.send({
                 message: "Customer not found",
+                status: 400,
+                data: {}
+            })
+        }
+        if (checkEmail[0].is_deleted == true){
+            return res.send ({
+                message: 'Customer not found',
                 status: 400,
                 data: {}
             })
@@ -264,7 +283,8 @@ function delete_customer (req, res) {
                 data: {}
             })
         }
-        let deleteCustomer = yield Customer.deleteOne ({email: req.body.email});
+
+        let deleteCustomer = yield Customer.update({ email: checkEmail[0].email }, { is_deleted: true });
         if (!_.isEmpty (deleteCustomer)){
             return res.send ({
                 message: 'Deleted succesfully',

@@ -33,6 +33,10 @@ var customerSchema = new schema ({
         type: Boolean,
         default: false
     },
+    is_deleted: {
+        type: Boolean,
+        required: false
+    },
     access_token: {
         type: String,
         required: true

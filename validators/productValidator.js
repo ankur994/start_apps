@@ -22,7 +22,8 @@ function registerProductValidation (req, res, next){
 function getProductsValidation (req, res, next){
   const schema = Joi.object({
       is_available: Joi.string(),
-      is_blocked: Joi.number()
+      is_blocked: Joi.number(),
+      is_deleted: Joi.string()
   })
   
   return new Promise (async (reject, resolve) => {
@@ -71,6 +72,20 @@ function blockProductValidation (req, res, next){
   })
 }
 
+//-------------------Delete product--------------------------
+function deleteProductValidation (req, res, next){
+  const schema = Joi.object({
+    _id: Joi.string().required()
+  })
+  
+  return new Promise (async (reject, resolve) => {
+      try {
+        const value = await schema.validateAsync(req.body);
+        next();
+      } catch (error){
+        res.send(error.details[0].message)
+      }
+  })
+}
 
-
-module.exports = { registerProductValidation, getProductsValidation, updateProductValidation, blockProductValidation }
+module.exports = { registerProductValidation, getProductsValidation, updateProductValidation, blockProductValidation, deleteProductValidation }

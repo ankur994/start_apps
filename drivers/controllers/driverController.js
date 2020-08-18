@@ -5,6 +5,7 @@ var common = require('./../../commonFunctions');
 var url = require ('./../../config');
 const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
+var otp = require ('../../commonFunctions');
 
 
 //-----------------Register driver-------------------------
@@ -29,7 +30,7 @@ function register_driver(req, res) {
             email: req.body.email,
             password: yield common.bcryptHash(req.body.password),
             phone_number: req.body.phone_number,
-            otp: '1111',
+            otp: otp.generateOTP(),
             access_token: registerToken,
             location: {
                 type: "Point",
@@ -66,6 +67,13 @@ function verify_otp_driver (req, res){
             phone_number: req.body.phone_number
         })
         if (_.isEmpty (checkPhone)){
+            return res.send ({
+                message: 'Driver not found',
+                status: 400,
+                data: {}
+            })
+        }
+        if (checkPhone[0].is_deleted == true){
             return res.send ({
                 message: 'Driver not found',
                 status: 400,
@@ -118,7 +126,13 @@ function login_driver(req, res) {
                 data: {}
             })
         }
-       
+        if (checkEmail[0].is_deleted == true){
+            return res.send ({
+                message: 'Driver not found',
+                status: 400,
+                data: {}
+            })
+        }
         if (checkEmail[0].is_verify == false){
             return res.send ({
                 message: "Email is not verified",
@@ -171,6 +185,13 @@ function forgot_password_driver (req, res){
         if (_.isEmpty (checkEmail)){
             return res.send({
                 message: "Driver not found",
+                status: 400,
+                data: {}
+            })
+        }
+        if (checkEmail[0].is_deleted == true){
+            return res.send ({
+                message: 'Driver not found',
                 status: 400,
                 data: {}
             })
@@ -354,5 +375,37 @@ function block_unblock_driver (req, res) {
     })
 }
 
+//------------------------Delete driver------------------------------
+function delete_driver (req, res) {
+    Promise.coroutine (function *(){
+        let checkEmail = yield Driver.find ({ email: req.body.email});
+        if (_.isEmpty (checkEmail)){
+            return res.send ({
+                message: 'Driver not found',
+                status: 400,
+                data: {}
+            })
+        }
+
+        let deleteDriver = yield Driver.update({ email: checkEmail[0].email }, { is_deleted: true });
+        if (!_.isEmpty (deleteDriver)){
+            return res.send ({
+                message: 'Deleted succesfully',
+                status: 200,
+                data: {}
+            })
+        }
+    })
+    ().catch((error) => {
+        console.log('Delete customer: Something went wrong', error)
+        return res.send({
+            message: "Delete customer error: Something went wrong",
+            status: 401,
+            data: {}
+        })
+    });
+}
+
+
 module.exports = { register_driver, login_driver,verify_otp_driver, forgot_password_driver, change_password_driver, update_driver,
-    block_unblock_driver}
+    block_unblock_driver, delete_driver }

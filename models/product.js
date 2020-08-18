@@ -25,6 +25,10 @@ var productSchema = new schema ({
     is_blocked:{
         type: Boolean,
         default: false
+    },
+    is_deleted: {
+        type: Boolean,
+        default: false
     }
     // created_at: {
     //     type: Date,

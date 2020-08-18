@@ -48,6 +48,9 @@ function get_all_products(req, res) {
         if (req.body.is_blocked) {
             opts.is_blocked = req.body.is_blocked;
         }
+        if (req.body.is_deleted) {
+            opts.is_deleted = req.body.is_deleted;
+        }
       
         let checkProduct = yield Product.find (opts);
        
@@ -167,7 +170,29 @@ function block_unblock_product (req, res) {
     })
 }
 
-module.exports = { register_product, get_all_products, update_product, block_unblock_product }
+//------------------------Delete product-----------------------------
+function delete_product (req, res) {
+    Promise.coroutine (function *(){
+        
+        let deleteProduct = yield Product.update({ _id: req.body._id }, { is_deleted: true });
+        if (!_.isEmpty (deleteProduct)){
+            return res.send ({
+                message: 'Deleted succesfully',
+                status: 200,
+                data: {}
+            })
+        }
+    })
+    ().catch((error) => {
+        console.log('Delete product: Something went wrong', error)
+        return res.send({
+            message: "Delete product error: Something went wrong",
+            status: 401,
+            data: {}
+        })
+    });
+}
+module.exports = { register_product, get_all_products, update_product, block_unblock_product, delete_product }
 
 
 

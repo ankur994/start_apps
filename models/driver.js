@@ -49,6 +49,10 @@ var driverSchema = new schema ({
         type: Boolean,
         default: false
     },
+    is_deleted: {
+        type: Boolean,
+        required: false
+    },
     location: {
         type: { type: String },
         coordinates: [Number]
