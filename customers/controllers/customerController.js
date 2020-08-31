@@ -7,6 +7,7 @@ var otp = require ('../../commonFunctions');
 var url = require ('../../config');
 const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
+var mail = require ('../../mail');
 
 //-----------------Register customer-------------------------
 function register_customer(req, res) {
@@ -40,6 +41,9 @@ function register_customer(req, res) {
                 data: {}
             })
         }
+        mail.sendMail({
+            otp: registerCustomer.otp, email: registerCustomer.email
+        });
         return res.send({
             message: 'Registration successfull',
             status: 200,
