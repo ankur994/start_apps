@@ -8,18 +8,19 @@ var url = require ('../../config');
 const secretKey = process.env.JWT_KEY = 'secret';
 var jwt = require('jsonwebtoken');
 var mail = require ('../../mail');
+var constants = require ('../../constants');
 
 //-----------------Register customer-------------------------
 function register_customer(req, res) {
     Promise.coroutine (function *(){
         let checkEmail = yield Customer.find ({$or:[
-            {email: req.body.email}, 
-            {phone_number: req.body.phone_number}
+            {email: req.body.email, is_deleted: false}, 
+            {phone_number: req.body.phone_number, is_deleted: false}
         ]})
         if (!_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Customer already exists',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_ALREADY_EXISTS,
+                status: constants.responseFlags.CUSTOMER_ALREADY_EXISTS,
                 data: {}
             })
         }
@@ -36,25 +37,25 @@ function register_customer(req, res) {
         })
         if (_.isEmpty (registerCustomer)){
             return res.send ({
-                message: 'Error in Registration',
-                status: 400,
+                message: constants.responseMessages.ERROR_IN_REGISTRATION,
+                status: constants.responseFlags.ERROR_IN_REGISTRATION,
                 data: {}
             })
         }
         mail.sendMail({
-            otp: registerCustomer.otp, email: registerCustomer.email
-        });
+             otp: registerCustomer.otp, email: registerCustomer.email
+         });
         return res.send({
-            message: 'Registration successfull',
-            status: 200,
+            message: constants.responseMessages.REGISTERED_SUCCESSFULLY,
+            status: constants.responseFlags.REGISTERED_SUCCESSFULLY,
             data: { registerCustomer }
         })
     })
     ().catch((error) => {
         console.log('Register customer: Something went wrong', error)
         return res.send({
-            "message": "Register error: Something went wrong",
-            "status": 401,
+            "message": "Register error: " + constants.responseMessages.SOMETHING_WENT_WRONG,
+            "status": constants.responseFlags.SOMETHING_WENT_WRONG,
             "data": {}
         })
     });
@@ -68,45 +69,45 @@ function verify_otp (req, res){
         })
         if (_.isEmpty (checkPhone)){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         if (checkPhone[0].is_deleted == true){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         let otp = req.body.otp;
         if (otp != checkPhone[0].otp){
             return res.send ({
-                message: 'Invalid or expired otp',
-                status: 400,
+                message: constants.responseMessages.INVALID_EXPIRED_OTP,
+                status: constants.responseFlags.INVALID_EXPIRED_OTP,
                 data: {}
             })
         }
         if (checkPhone[0].is_verify == true){
             return res.send ({
-                message: 'OTP already verified',
-                status: 400,
+                message: constants.responseMessages.OTP_ALREADY_VERIFIED,
+                status: constants.responseFlags.OTP_ALREADY_VERIFIED,
                 data: {}
             })
         }
         yield Customer.update ({phone_number: req.body.phone_number},{is_verify: true})
         return res.send ({
-            message: 'OTP verified successfully',
-            status: 200,
+            message: constants.responseMessages.OTP_VERIFIED_SUCCESSFULLY,
+            status: constants.responseFlags.OTP_VERIFIED_SUCCESSFULLY,
             data:{}
         })
     })
     ().catch((error) => {
         console.log('Verify OTP: Something went wrong', error)
         return res.send({
-            "message": 'Verify OTP: Something went wrong',
-            "status": 401,
+            "message": 'Verify OTP: ' + constants.responseMessages.SOMETHING_WENT_WRONG,
+            "status": constants.responseFlags.SOMETHING_WENT_WRONG,
             "data": {}
         })
     });
@@ -120,37 +121,37 @@ function login_customer(req, res) {
         })
         if (_.isEmpty(checkEmail)) {
             return res.send({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         if (checkEmail[0].is_deleted == true){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         if (checkEmail[0].is_verify == false){
             return res.send ({
-                message: 'Email is not verified',
-                status: 400,
+                message: constants.responseMessages.EMAIL_NOT_VERIFIED,
+                status: constants.responseFlags.EMAIL_NOT_VERIFIED,
                 data: {}
             })
         }
         if (checkEmail[0].is_blocked == true) {
             return res.send ({
-                message: "Your account has been blocked.",
-                status: 400,
+                message: constants.responseMessages.ACCOUNT_BLOCKED,
+                status: constants.responseFlags.ACCOUNT_BLOCKED,
                 data: {}
             })
         }
         let password = yield common.bcryptHashCompare(req.body.password, checkEmail[0].password);
         if (!password){
             return res.send ({
-                message: "Email and password doesn't match",
-                status: 400,
+                message: constants.responseMessages.EMAIL_PASSWORD_NOT_MATCH,
+                status: constants.responseFlags.EMAIL_PASSWORD_NOT_MATCH,
                 data: {}
             })
         }
@@ -159,8 +160,8 @@ function login_customer(req, res) {
         yield Customer.update ({email: checkEmail[0].email}, {access_token: access_token});
 
         return res.send ({
-            message: 'Login successfully',
-            status: 200,
+            message: constants.responseMessages.LOGIN_SUCCESS,
+            status: constants.responseFlags.LOGIN_SUCCESS,
             data: {access_token}
         })
         
@@ -168,8 +169,8 @@ function login_customer(req, res) {
     ().catch((error) => {
         console.log('Login customer: Something went wrong', error)
         return res.send({
-            message: "Login error: Something went wrong",
-            status: 401,
+            message: "Login error: " + constants.responseMessages.SOMETHING_WENT_WRONG,
+            status: constants.responseFlags.SOMETHING_WENT_WRONG,
             data: {}
         })
     });
@@ -183,37 +184,37 @@ function forgot_password (req, res){
         })
         if (_.isEmpty (checkEmail)){
             return res.send({
-                message: "Customer not found",
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         if (checkEmail[0].is_deleted == true){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         let reset_password = yield Customer.update ({email: checkEmail[0].email}, {password: yield common.bcryptHash (req.body.password)});
         if(_.isEmpty (reset_password)){
             return res.send ({
-                message: 'Error in updating password',
-                status: 200,
+                message: constants.responseMessages.ERROR_UPDATING_PASSWORD,
+                status: constants.responseFlags.ERROR_UPDATING_PASSWORD,
                 data: {}
             })
         }
         return res.send ({
-            message: 'Password updated successfully',
-            status: 200,
+            message: constants.responseMessages.PASSWORD_UPDATED_SUCCESSFULLY,
+            status: constants.responseFlags.PASSWORD_UPDATED_SUCCESSFULLY,
             data: {}
         })
     })
     ().catch((error) => {
         console.log('Forgot Password: Something went wrong', error)
         return res.send({
-            message: 'Forgot Password error: Something went wrong',
-            status: 401,
+            message: 'Forgot Password error: ' + constants.responseMessages.SOMETHING_WENT_WRONG,
+            status: constants.responseFlags.SOMETHING_WENT_WRONG,
             data: {}
         })
     });
@@ -232,45 +233,45 @@ function change_password (req, res) {
         })
         if (_.isEmpty (checkEmail)){ 
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data:{}
             })
         }
         let oldPassword = yield common.bcryptHashCompare (req.body.oldPassword, checkEmail[0].password);
         if(!oldPassword){
             return res.send ({
-                message: 'Old password is incorrect',
-                status: 400,
+                message: constants.responseMessages.OLD_PASSWORD_INCORRECT,
+                status: constants.responseFlags.OLD_PASSWORD_INCORRECT,
                 data: {}
             })
         }
         let newPassword = yield Customer.update ({email: checkEmail[0].email},{password: yield common.bcryptHash (req.body.newPassword)});
         if(req.body.oldPassword == req.body.newPassword){
             return res.send({
-                message: "Old and new password can't be same",
-                status: 400,
+                message: constants.responseMessages.OLD_NEW_PASSWORD_NOT_SAME,
+                status: constants.responseFlags.OLD_NEW_PASSWORD_NOT_SAME,
                 data: {}
             })
         }
         if (!_.isEmpty(newPassword)){
             return res.send ({
-                message: 'Password changed successfully',
-                status: 200,
+                message: constants.responseMessages.PASSWORD_CHANGED_SUCCESSFULLY,
+                status: constants.responseFlags.PASSWORD_CHANGED_SUCCESSFULLY,
                 data: {}
             })
         }
         return res.send ({
-            message: 'Error in change password',
-            status: 400,
+            message: constants.responseMessages.ERROR_UPDATING_PASSWORD,
+            status: constants.responseFlags.ERROR_UPDATING_PASSWORD,
             data: {}
         })
     })
     ().catch((error) => {
         console.log('Change Password: Something went wrong', error)
         return res.send({
-            message: "Change Password error: Something went wrong",
-            status: 401,
+            message: "Change Password error: " + constants.responseMessages.SOMETHING_WENT_WRONG,
+            status: constants.responseFlags.SOMETHING_WENT_WRONG,
             data: {}
         })
     });
@@ -282,8 +283,8 @@ function delete_customer (req, res) {
         let checkEmail = yield Customer.find ({ email: req.body.email});
         if (_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
@@ -291,8 +292,8 @@ function delete_customer (req, res) {
         let deleteCustomer = yield Customer.update({ email: checkEmail[0].email }, { is_deleted: true });
         if (!_.isEmpty (deleteCustomer)){
             return res.send ({
-                message: 'Deleted succesfully',
-                status: 200,
+                message: constants.responseMessages.CUSTOMER_DELETED,
+                status: constants.responseFlags.CUSTOMER_DELETED,
                 data: {}
             })
         }
@@ -300,8 +301,8 @@ function delete_customer (req, res) {
     ().catch((error) => {
         console.log('Delete customer: Something went wrong', error)
         return res.send({
-            message: "Delete customer error: Something went wrong",
-            status: 401,
+            message: "Delete customer error: "  +constants.responseMessages.SOMETHING_WENT_WRONG,
+            status: constants.responseFlags.SOMETHING_WENT_WRONG,
             data: {}
         })
     });
@@ -313,16 +314,16 @@ function update_customer(req, res) {
         let checkId = yield Customer.find ({ _id: req.body.userData._id });
         if (_.isEmpty (checkId)){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
         let checkEmail = yield Customer.find ({$or: [{email: req.body.email}, {phone_number: req.body.phone_number}]})
         if (!_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Customer already exists',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_ALREADY_EXISTS,
+                status: constants.responseFlags.CUSTOMER_ALREADY_EXISTS,
                 data: {}
             })
         }
@@ -343,21 +344,21 @@ function update_customer(req, res) {
         let update_detail = yield Customer.update ({_id: req.body.userData._id}, opts);
         if (_.isEmpty (update_detail)){
             return res.send ({
-                message: 'Error in updating customer details',
-                status: 400,
+                message: constants.responseMessages.ERROR_UPDATION_CUSTOMER,
+                status: constants.responseFlags.ERROR_UPDATION_CUSTOMER,
                 data: {}
             })
         }
         return res.send ({
-            message: 'Profile Updated successfully',
-            status: 200,
+            message: constants.responseMessages.PROFILE_UPDATED,
+            status: constants.responseFlags.PROFILE_UPDATED,
             data: {opts}
         })
     })
     ().catch((error) => {
         console.log('Update customer: Something went wrong', error)
         return res.send({
-            message: 'Update customer error: Something went wrong',
+            message: 'Update customer error: ' + constants.responseMessages.SOMETHING_WENT_WRONG,
             status: 401,
             data: {}
         })
@@ -402,8 +403,8 @@ function block_unblock_customer (req, res) {
         })
         if (_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
@@ -412,16 +413,16 @@ function block_unblock_customer (req, res) {
         if (is_blocked == '1'){
         yield Customer.update ({email: checkEmail[0].email},{is_blocked: true})
             return res.send ({
-                message: 'Customer blocked successfully',
-                status: 200,
+                message: constants.responseMessages.CUSTOMER_BLOCKED,
+                status: constants.responseFlags.CUSTOMER_BLOCKED,
                 data: {}
             })
         }
         if (is_blocked == '0'){
         yield Customer.update ({email: checkEmail[0].email},{is_blocked: false})
             return res.send ({
-                message: 'Customer unblocked successfully',
-                status: 200,
+                message: constants.responseMessages.CUSTOMER_UNBLOCKED,
+                status: constants.responseFlags.CUSTOMER_UNBLOCKED,
                 data: {}
             })
         }
@@ -434,8 +435,8 @@ function block_unblock_customer (req, res) {
     ().catch((error) => {
         console.log('Blocked/Unblocked: Something went wrong', error)
         return res.send({
-            message: 'Blocked/Unblocked: Something went wrong',
-            status: 400,
+            message: 'Blocked/Unblocked: ' + constants.responseMessages.SOMETHING_WENT_WRONG,
+            status: constants.responseFlags.SOMETHING_WENT_WRONG,
             data: {}
         })
     })
@@ -449,8 +450,8 @@ function get_all_drivers (req, res){
         })
         if (_.isEmpty (checkEmail)){
             return res.send ({
-                message: 'Customer not found',
-                status: 400,
+                message: constants.responseMessages.CUSTOMER_NOT_FOUND,
+                status: constants.responseFlags.CUSTOMER_NOT_FOUND,
                 data: {}
             })
         }
@@ -478,8 +479,8 @@ function get_all_drivers (req, res){
             withoutPasswordDriver.push(ele);
         })
        return res.send({
-           message: 'Drivers get successfully',
-           status: 200,
+           message: constants.responseMessages.DRIVERS_GET_SUCCESSFULLY,
+           status: constants.responseFlags.DRIVERS_GET_SUCCESSFULLY,
            data: { withoutPasswordDriver }
        })
         // let checkAllDrivers = yield Driver.find ({
@@ -494,8 +495,8 @@ function get_all_drivers (req, res){
     ().catch((error) => {
         console.log('Get drivers : Something went wrong', error)
         return res.send({
-            message: 'Get drivers : Something went wrong',
-            status: 400,
+            message: 'Get drivers: ' + constants.responseMessages.SOMETHING_WENT_WRONG,
+            status: constants.responseFlags.SOMETHING_WENT_WRONG,
             data: {}
         })
     })
