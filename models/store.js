@@ -1,12 +1,13 @@
+const { number } = require('@hapi/joi');
 var mongoose = require ('mongoose');
 var schema = mongoose.Schema;
 
-var customerSchema = new schema ({
-    first_name: {
+var storeSchema = new schema ({
+    merchant_name: {
         type: String, 
         required: true
     },
-    last_name: {
+    store_name: {
         type: String, 
         required: true
     },
@@ -15,16 +16,12 @@ var customerSchema = new schema ({
         required: true,
         lowercase: true
     },
-    password: {
-        type: String,
-        required: true
-    },
     phone_number: {
         type: Number,
         required: true
     },
-    otp: {
-        type: Number,
+    password: {
+        type: String,
         required: true
     },
     is_verify: {
@@ -43,11 +40,13 @@ var customerSchema = new schema ({
         type: Boolean,
         default: false
     },
-    // created_at: {
-    //     type: Date,
-    //     default: Date.now(),
-    // },
+    location: {
+        type: { type: String },
+        coordinates: [Number]
+     }
+  
 },{timestamps: true})
+storeSchema.index({ location: "2dsphere" });
 
-var customerModel = mongoose.model ('customers', customerSchema);
-module.exports = customerModel;
+var storeModel = mongoose.model ('stores', storeSchema);
+module.exports = storeModel;

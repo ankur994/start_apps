@@ -25,7 +25,16 @@ exports.responseMessages = {
     CUSTOMER_BLOCKED                    : 'Customer blocked successfully',
     CUSTOMER_UNBLOCKED                  : 'Customer unblocked successfully',
     ERROR_IN_DRIVERS                    : 'Error in getting drivers',
-    DRIVERS_GET_SUCCESSFULLY            : 'Drivers get successfully'
+    DRIVERS_GET_SUCCESSFULLY            : 'Drivers get successfully',
+
+    STORE_ALREADY_EXISTS                : 'Store already exists',
+    STORE_NOT_FOUND                     : 'Store not found',
+    STORE_BLOCKED                       : 'Store blocked successfully',
+    STORE_UNBLOCKED                     : 'Store unblocked successfully',
+    STORE_DELETED                       : 'Store deleted successfully',
+    STORE_ALREADY_DELETED               : 'Store already deleted',
+    ERROR_UPDATION_STORE                : 'Error in updating store details',
+    STORES_GET_SUCCESSFULLY            : 'Stores get successfully',
 }
 
 exports.responseFlags = {
@@ -55,5 +64,14 @@ exports.responseFlags = {
     CUSTOMER_BLOCKED                    : 200,
     CUSTOMER_UNBLOCKED                  : 200,
     ERROR_IN_DRIVERS                    : 400,
-    DRIVERS_GET_SUCCESSFULLY            : 200
+    DRIVERS_GET_SUCCESSFULLY            : 200,
+
+    STORE_ALREADY_EXISTS                : 201,
+    STORE_NOT_FOUND                     : 201,
+    STORE_BLOCKED                       : 200,
+    STORE_UNBLOCKED                     : 200,
+    STORE_DELETED                       : 201,
+    STORE_ALREADY_DELETED               : 201,
+    ERROR_UPDATION_STORE                : 400,
+    STORES_GET_SUCCESSFULLY             : 200,
 }

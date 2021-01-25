@@ -5,18 +5,17 @@ var Driver = require ('../../models/driver');
 var common = require('../../commonFunctions');
 var otp = require ('../../commonFunctions');
 var url = require ('../../config');
-const secretKey = process.env.JWT_KEY = 'secret';
-var jwt = require('jsonwebtoken');
 var mail = require ('../../mail');
 var constants = require ('../../constants');
 
-//-----------------Register customer-------------------------
+// -----------------Register customer-------------------------
 function register_customer(req, res) {
     Promise.coroutine (function *(){
         let checkEmail = yield Customer.find ({$or:[
             {email: req.body.email, is_deleted: false}, 
             {phone_number: req.body.phone_number, is_deleted: false}
         ]})
+     
         if (!_.isEmpty (checkEmail)){
             return res.send ({
                 message: constants.responseMessages.CUSTOMER_ALREADY_EXISTS,
@@ -24,7 +23,8 @@ function register_customer(req, res) {
                 data: {}
             })
         }
-        let registerToken = jwt.sign({email: req.body.email, _id: req.body._id}, secretKey, {expiresIn: '50d'})
+        // let registerToken = jwt.sign({email: req.body.email, _id: req.body._id}, secretKey, {expiresIn: '50d'})
+        let registerToken = yield common.generateJWTtoken ({email: req.body.email, _id: req.body._id})
 
         let registerCustomer = yield Customer.create ({
             first_name: req.body.first_name,
@@ -42,9 +42,10 @@ function register_customer(req, res) {
                 data: {}
             })
         }
-        mail.sendMail({
-             otp: registerCustomer.otp, email: registerCustomer.email
-         });
+        // mail.sendMail({
+        //     email: registerCustomer.email
+        // });
+
         return res.send({
             message: constants.responseMessages.REGISTERED_SUCCESSFULLY,
             status: constants.responseFlags.REGISTERED_SUCCESSFULLY,

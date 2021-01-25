@@ -3,6 +3,7 @@ var product = require ('./products/controllers/productController');
 var order = require ('./orders/controllers/orderController');
 var middle = require ('./middleware/auth');
 var driver = require ('./drivers/controllers/driverController');
+var store = require ('./stores/controllers/storeController');
 
 var customerJoi = require ('./validators/customerValidator');
 var productJoi = require ('./validators/productValidator');
@@ -29,6 +30,14 @@ app.post ('/change_password_driver',    driverJoi.changePasswordValidation, midd
 app.post('/update_driver',              driverJoi.updateDriverValidation, middle.verify_token, driver.update_driver);
 app.post('/block_unblock_driver',       driverJoi.blockDriverValidation, driver.block_unblock_driver);
 app.post('/delete_driver',              driverJoi.deleteDriverValidation, driver.delete_driver);
+
+// ----------------Store API's------------------
+app.post('/register_store', store.register_store);
+app.post('/login_store', store.login_store);
+app.post('/block_unblock_store', store.block_unblock_store);
+app.post('/delete_store', store.delete_store);
+app.post('/update_store', middle.verify_token, store.update_store);
+app.post('/get_all_stores', store.get_all_stores);
 
 // ----------------Product API's------------------
 app.post('/register_product',           productJoi.registerProductValidation, product.register_product);
