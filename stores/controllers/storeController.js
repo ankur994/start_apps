@@ -20,7 +20,7 @@ async function register_store(req, res) {
             })
         }
 
-        let registerToken = await common.generateJWTtoken({email: req.body.email, _id: req.body._id});
+        let registerToken = await common.generateJWTtoken({email: req.body.email});
 
         let registerStore = await Store.create ({
             merchant_name: req.body.merchant_name,

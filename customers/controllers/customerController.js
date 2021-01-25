@@ -24,7 +24,7 @@ function register_customer(req, res) {
             })
         }
         // let registerToken = jwt.sign({email: req.body.email, _id: req.body._id}, secretKey, {expiresIn: '50d'})
-        let registerToken = yield common.generateJWTtoken ({email: req.body.email, _id: req.body._id})
+        let registerToken = yield common.generateJWTtoken ({email: req.body.email})
 
         let registerCustomer = yield Customer.create ({
             first_name: req.body.first_name,
