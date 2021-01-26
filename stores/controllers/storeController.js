@@ -5,13 +5,13 @@ var common = require('../../commonFunctions');
 var url = require ('../../config');
 var constants = require ('../../constants');
 
+
 // -----------------Register store-------------------------
 async function register_store(req, res) {
     try {
-        let checkEmail = await Store.find ({$or:[
+        let checkEmail = await Store.find (
             {email: req.body.email, is_deleted: false}
-        ]})
-
+        )
         if (!_.isEmpty (checkEmail)){
             return res.send ({
                 message: constants.responseMessages.STORE_ALREADY_EXISTS,
@@ -58,22 +58,14 @@ async function register_store(req, res) {
     };
 }
 
-//------------------------Login------------------------------
+//-------------------------------Login-------------------------------------
 async function login_store(req, res) {
     try {
         let checkEmail = await Store.find({
             email: req.body.email
         })
-
-        if (_.isEmpty(checkEmail)) {
+        if (_.isEmpty(checkEmail) || checkEmail[0].is_deleted == true ) {
             return res.send({
-                message: constants.responseMessages.STORE_NOT_FOUND,
-                status: constants.responseFlags.STORE_NOT_FOUND,
-                data: {}
-            })
-        }
-        if (checkEmail[0].is_deleted == true){
-            return res.send ({
                 message: constants.responseMessages.STORE_NOT_FOUND,
                 status: constants.responseFlags.STORE_NOT_FOUND,
                 data: {}
@@ -102,14 +94,13 @@ async function login_store(req, res) {
                 data: {}
             })
         }
-
-        let access_token = jwt.sign({email: checkEmail[0].email, _id: checkEmail[0]._id }, secretKey, { expiresIn: '50d' });
-        await Store.updateOne ({email: checkEmail[0].email}, {access_token: access_token});
+        let loginToken = await common.generateJWTtoken ({email: checkEmail[0].email, _id: checkEmail[0]._id})
+        await Store.updateOne({email: checkEmail[0].email}, {access_token: loginToken})
 
         return res.send ({
             message: constants.responseMessages.LOGIN_SUCCESS,
             status: constants.responseFlags.LOGIN_SUCCESS,
-            data: {access_token}
+            data: {loginToken}
         })
     }
     catch(error) {

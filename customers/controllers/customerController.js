@@ -15,7 +15,6 @@ function register_customer(req, res) {
             {email: req.body.email, is_deleted: false}, 
             {phone_number: req.body.phone_number, is_deleted: false}
         ]})
-     
         if (!_.isEmpty (checkEmail)){
             return res.send ({
                 message: constants.responseMessages.CUSTOMER_ALREADY_EXISTS,
@@ -157,13 +156,15 @@ function login_customer(req, res) {
             })
         }
 
-        let access_token = jwt.sign({email: checkEmail[0].email, _id: checkEmail[0]._id }, secretKey, { expiresIn: '50d' });
-        yield Customer.update ({email: checkEmail[0].email}, {access_token: access_token});
+        // let access_token = jwt.sign({email: checkEmail[0].email, _id: checkEmail[0]._id }, secretKey, { expiresIn: '50d' });
+        // yield Customer.update ({email: checkEmail[0].email}, {access_token: access_token});
+        let loginToken = yield common.generateJWTtoken ({email: checkEmail[0].email, _id: checkEmail[0]._id})
+        yield Customer.updateOne({email: checkEmail[0].email}, {access_token: loginToken})
 
         return res.send ({
             message: constants.responseMessages.LOGIN_SUCCESS,
             status: constants.responseFlags.LOGIN_SUCCESS,
-            data: {access_token}
+            data: {loginToken}
         })
         
     })

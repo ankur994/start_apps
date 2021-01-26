@@ -13,7 +13,7 @@ var customerSchema = new schema ({
     email: {
         type: String,
         required: true,
-        lowercase: true
+        lowercase: true,
     },
     password: {
         type: String,
